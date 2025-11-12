@@ -1,0 +1,71 @@
+import frappe
+from frappe.utils import flt
+
+def calculate_total_working_hours(doc, method=None):
+    """
+    Compute working hours for Salary Slip based on Attendance.
+    Fields computed:
+      - total_basic_hours: regular days (no rest, no special, no legal)
+      - total_sp_hours: special holidays
+      - total_lp_hours: legal holidays
+      - total_rd_hours: rest days
+      - total_reg_ot_hours: regular overtime hours
+    """
+    total_basic_hours = total_sp_hours = total_lp_hours = total_rd_hours = total_reg_ot_hours = 0.0
+
+    attendance_records = frappe.get_all(
+        "Attendance",
+        filters={
+            "employee": doc.employee,
+            "attendance_date": ["between", [doc.start_date, doc.end_date]],
+            "docstatus": 1
+        },
+        fields=["working_hours", "overtime", "rest_day", "special_holiday", "legal_holiday"]
+    )
+
+    for att in attendance_records:
+        # Regular day
+        if not att.rest_day and not att.special_holiday and not att.legal_holiday:
+            total_basic_hours += flt(att.working_hours)
+            total_reg_ot_hours += flt(att.overtime)
+        # Rest day
+        if att.rest_day:
+            total_rd_hours += flt(att.working_hours)
+        # Special holiday
+        if att.special_holiday:
+            total_sp_hours += flt(att.working_hours)
+        # Legal holiday
+        if att.legal_holiday:
+            total_lp_hours += flt(att.working_hours)
+
+    doc.total_basic_hours = total_basic_hours
+    doc.total_rd_hours = total_rd_hours
+    doc.total_sp_hours = total_sp_hours
+    doc.total_lp_hours = total_lp_hours
+    doc.total_reg_ot_hours = total_reg_ot_hours
+
+
+from frappe import _
+
+def copy_salary_component_fields(doc, method=None):
+    """
+    Copy custom fields safely without breaking formulas.
+    """
+    for table in ("earnings", "deductions"):
+        for row in doc.get(table):
+            if not row.salary_component:
+                continue
+            sc = frappe.get_cached_doc("Salary Component", row.salary_component)
+            for field in [
+                "formula_based_on_attendance",
+                "formula_effectivity",
+                "formula_prorated",
+                "is_13th_month_pay_applicable",
+                "is_basic_pay",
+            ]:
+                if hasattr(sc, field):
+                    setattr(row, field, getattr(sc, field))
+
+    # Recalculate gross pay and basic pay after updating rows
+    doc.calculate_net_pay()
+

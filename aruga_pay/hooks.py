@@ -5,6 +5,28 @@ app_description = "N/A"
 app_email = "carl@servio.ph"
 app_license = "mit"
 
+
+
+# patches or overrides
+# after_migrate = [
+#     "aruga_pay.patches.salary_slip_patch.patch_salary_slip"
+# ]
+
+fixtures = [
+
+	{"dt": "Salary Component", "filters": [["disabled", "=", False], ["name", "like", "PH - %"]]},
+	
+]
+
+doc_events = {
+    "Salary Slip": {
+        "before_save": [
+            "aruga_pay.aruga_payroll.doctype.salary_slip.salary_slip.calculate_total_working_hours",
+            "aruga_pay.aruga_payroll.doctype.salary_slip.salary_slip.copy_salary_component_fields"
+        ]
+    }
+}
+
 # Apps
 # ------------------
 
