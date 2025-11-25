@@ -27,6 +27,12 @@ doc_events = {
     }
 }
 
+override_doctype_class = {
+	# "ToDo": "custom_app.overrides.CustomToDo"
+    "Salary Slip": "aruga_pay.aruga_payroll.overrides.salary_slip.CustomSalarySlip",
+}
+
+
 # Apps
 # ------------------
 
