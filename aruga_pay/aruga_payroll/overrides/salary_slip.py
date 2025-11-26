@@ -4,6 +4,7 @@
 
 import unicodedata
 from datetime import date
+from datetime import datetime
 
 import frappe
 from frappe import _, msgprint
@@ -1341,6 +1342,9 @@ class CustomSalarySlip(TransactionBase):
 		data.update({
 			'min': lambda x, y: min(x, y),
 			'max': lambda x, y: max(x, y),
+			'month': lambda d: getdate(d).month,
+			'year': lambda d: getdate(d).year,
+			'day': lambda d: getdate(d).day,
 		})
 		data.update(self.get_component_abbr_map())
 
