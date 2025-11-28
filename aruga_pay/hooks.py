@@ -11,12 +11,14 @@ app_license = "mit"
 # after_migrate = [
 #     "aruga_pay.patches.salary_slip_patch.patch_salary_slip"
 # ]
+#uncomment this to export
+# fixtures = [
 
-fixtures = [
+# 	# {"dt": "Salary Component", "filters": [["disabled", "=", False], ["name", "like", "PH - %"]]},
+# 	# {"dt": "Identification Document Type", "filters":{"Region": "PH"}},
+#     # {"dt": "Religion"}
 
-	{"dt": "Salary Component", "filters": [["disabled", "=", False], ["name", "like", "PH - %"]]},
-	
-]
+# ]
 
 doc_events = {
     "Salary Slip": {
