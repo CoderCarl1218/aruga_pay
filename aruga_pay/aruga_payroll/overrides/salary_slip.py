@@ -1320,17 +1320,30 @@ class CustomSalarySlip(TransactionBase):
 	# In salary_slip.py (custom override or patched method)
 
 	def get_data_for_eval(self):
+		"""Returns data for evaluating salary structure formulas, including custom fields"""
 		data = frappe._dict()
+		
+		# Fetch employee as dict
 		employee = frappe.get_cached_doc("Employee", self.employee).as_dict()
 		
+		# Ensure salary structure assignment is set
 		if not hasattr(self, "_salary_structure_assignment"):
 			self.set_salary_structure_assignment()
-		
-		data.update(self.calculate_salary_structure_rates(self._salary_structure_assignment))
-		data.update(self.as_dict())
-		data.update(employee)
 
-		# Correctly pass 3 args: pay, date, contribution_type
+		# Convert assignment to dict to include all custom fields
+		assignment_dict = frappe.get_doc("Salary Structure Assignment", self._salary_structure_assignment.name).as_dict()
+		
+		# Add calculated rates
+		data.update(self.calculate_salary_structure_rates(assignment_dict))
+		
+		# Include all fields from salary structure assignment (including custom fields)
+		data.update(assignment_dict)
+		
+		# Include employee info and salary slip info
+		data.update(employee)
+		data.update(self.as_dict())
+
+		# Common payroll functions
 		data.update({
 			'ph_sss': lambda pay: self.calculate_employee_sss_contribution(pay, self.end_date, 'employee_contribution'),
 			'ph_sss_er': lambda pay: self.calculate_employee_sss_contribution(pay, self.end_date, 'employer_contribution'),
@@ -1339,6 +1352,7 @@ class CustomSalarySlip(TransactionBase):
 			'ph_13th_month_pay': lambda: self.calculate_13th_month_pay(),
 		})
 
+		# Helper functions
 		data.update({
 			'min': lambda x, y: min(x, y),
 			'max': lambda x, y: max(x, y),
@@ -1346,9 +1360,11 @@ class CustomSalarySlip(TransactionBase):
 			'year': lambda d: getdate(d).year,
 			'day': lambda d: getdate(d).day,
 		})
+
+		# Include abbreviation mappings
 		data.update(self.get_component_abbr_map())
 
-		# Default amounts for tax
+		# Default amounts for earnings and deductions
 		default_data = data.copy()
 		for key in ("earnings", "deductions"):
 			for d in self.get(key):
@@ -1356,6 +1372,7 @@ class CustomSalarySlip(TransactionBase):
 				data[d.abbr] = d.amount or 0
 
 		return data
+
 
 	def calculate_employee_sss_contribution(self, pay, date, contribution_type):
 		contribution_table = frappe.get_list(
