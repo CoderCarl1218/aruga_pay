@@ -3,8 +3,10 @@
 
 
 import unicodedata
-from datetime import date
-from datetime import datetime
+import datetime
+
+
+
 
 import frappe
 from frappe import _, msgprint
@@ -71,7 +73,7 @@ class CustomSalarySlip(TransactionBase):
 			"long": int,
 			"round": round,
 			"rounded": rounded,
-			"date": date,
+			"date": datetime.date,
 			"getdate": getdate,
 			"get_first_day": get_first_day,
 			"get_last_day": get_last_day,
@@ -1921,7 +1923,7 @@ class CustomSalarySlip(TransactionBase):
 				"is_tax_applicable",
 				"is_flexible_benefit",
 				"variable_based_on_taxable_salary",
-				"exempted_from_income_tax",
+				"exempted_from_income_tax",'is_basic_pay'
 			):
 				component_row.set(attr, component_data.get(attr))
 
@@ -2701,7 +2703,7 @@ def eval_tax_slab_condition(condition, eval_globals=None, eval_locals=None):
 			"float": float,
 			"long": int,
 			"round": round,
-			"date": date,
+			"date": datetime.date,
 			"getdate": getdate,
 			"get_first_day": get_first_day,
 			"get_last_day": get_last_day,
